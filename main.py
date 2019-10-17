@@ -1,6 +1,5 @@
 from cred_tool import Dumper
 import argparse
-import pdb
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
