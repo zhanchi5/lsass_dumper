@@ -1,0 +1,2 @@
+impacket==0.9.20
+pypykatz==0.2.4
