@@ -80,7 +80,7 @@ class Dumper:
         )
         os = self.smb_impacket.getServerOS()
         arch = self.get_arch()
-        pdb.set_trace()
+        # pdb.set_trace()
         domain = self.smb_impacket.getServerDomain()
         info_dict.update({"target": self.target})
         info_dict.update({"os": os})
