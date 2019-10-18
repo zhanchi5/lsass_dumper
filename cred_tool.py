@@ -90,14 +90,6 @@ class Dumper:
         filename = re.sub(r"\d+", "", path.basename(src))
         self.smb_impacket.putFile("C$", filename, open(src, "rb").read)
 
-    def upload_file_smbmap(self):
-        if self.host_info["arch"] == 64:
-            src = src_x64
-        elif self.host_info["arch"] == 32:
-            src = src_x32
-        dst = "C$\procdump.exe"
-        self.smb_smbmap.upload_file(self.host_info["target"], src, dst)
-
     def exec_procdump(self):
 
         executer = PSEXEC(
