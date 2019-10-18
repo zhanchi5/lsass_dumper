@@ -24,7 +24,10 @@ def main():
         for target in targets_list:
             try:
                 task = Dumper(
-                    username=username, password=password, domain=domain, target=target
+                    username=username,
+                    password=password,
+                    domain=domain,
+                    target=target.strip(),
                 )
                 task.run()
             except:
