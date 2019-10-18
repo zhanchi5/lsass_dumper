@@ -1,8 +1,13 @@
 #!/usr/bin/python3
+
+######################Impacket###################################
 from impacket.smbconnection import SMBConnection
 from impacket.dcerpc.v5.rpcrt import DCERPCException
 from impacket.dcerpc.v5.transport import DCERPCTransportFactory
 from impacket.dcerpc.v5.epm import MSRPC_UUID_PORTMAP
+
+################################################################
+
 from configuration import src_x32, src_x64
 from argparse import Namespace
 from psexec import PSEXEC
@@ -13,7 +18,6 @@ import os
 
 
 #########################Pypykatz##############################
-# sys.path.append("pypykatz/pypykatz")
 
 from pypykatz.utils.crypto.cmdhelper import CryptoCMDHelper
 from pypykatz.ldap.cmdhelper import LDAPCMDHelper
