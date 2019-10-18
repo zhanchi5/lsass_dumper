@@ -15,5 +15,9 @@ Overlook of a process:
 
 ### Usage:
 ```bash
-    python3 main.py -u <Hiccup> -p <Toothless> -d <Berk> -H <x.x.x.x>
+    python3 main.py -u <Webby> -p <W0nderQ@ack> -d <DuckBurg> -H <target_ip>
+```
+  or
+```bash
+  python3 main.py -u <Webby> -p <W0nderQ@ack> -d <DuckBurg> -L </path/to/target_file>
 ```

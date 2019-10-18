@@ -44,8 +44,6 @@ class Dumper:
         )
         self.host_info = self.enum_host_info()
 
-        self.run()
-
     def enum_host_info(self):
         info_dict = {}
         self.smb_impacket.login(

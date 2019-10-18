@@ -2,7 +2,7 @@ from cred_tool import Dumper
 import argparse
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-u", "--username", help="Usernmae to login with")
     parser.add_argument("-p", "--password", help="Passwprd to login with")
@@ -26,6 +26,7 @@ if __name__ == "__main__":
                 task = Dumper(
                     username=username, password=password, domain=domain, target=target
                 )
+                task.run()
             except:
                 print(f"Something went wrong with {target}")
     else:
@@ -33,3 +34,8 @@ if __name__ == "__main__":
         task = Dumper(
             username=username, password=password, domain=domain, target=target
         )
+        task.run()
+
+
+if __name__ == "__main__":
+    main()
