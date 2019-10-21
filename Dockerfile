@@ -10,4 +10,4 @@ RUN apt update && apt install -y \
 RUN git clone https://github.com/zhanchi5/lsass_dumper.git
 #RUN apt install python3-dev openssl-dev libffi-dev gcc && pip3 install --upgrade pip
 RUN pip3 install -r lsass_dumper/requirements.txt
-
+Run mkdir lsass_dumper/reports
