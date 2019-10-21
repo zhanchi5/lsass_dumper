@@ -1,5 +1,6 @@
 from cred_tool import Dumper
 import argparse
+import sys
 
 
 def main():
@@ -13,6 +14,10 @@ def main():
     )
 
     args = parser.parse_args()
+    if len(sys.argv) > 1:
+        pass
+    else:
+        sys.exit(0)
     username = args.username
     password = args.password
     domain = args.domain
