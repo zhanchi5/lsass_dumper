@@ -71,14 +71,14 @@ class Dumper:
                 dce.bind(MSRPC_UUID_PORTMAP, transfer_syntax=NDR64Syntax)
             except DCERPCException as e:
                 if str(e).find("syntaxes_not_supported") >= 0:
-                    self.host_info["arch"] = 32
+                    return 32
                 else:
                     pass
             else:
-                self.host_info["arch"] = 64
+                return 64
             dce.disconnect()
         except Exception:
-            self.host_info["arch"] = "Unknown"
+            return "Unknown"
 
     def upload_file(self):
         if self.host_info["arch"] == 64:
