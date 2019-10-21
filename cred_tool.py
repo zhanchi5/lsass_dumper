@@ -6,6 +6,7 @@ from impacket.dcerpc.v5.rpcrt import DCERPCException
 from impacket.dcerpc.v5.transport import DCERPCTransportFactory
 from impacket.dcerpc.v5.epm import MSRPC_UUID_PORTMAP
 
+# from getArch import TARGETARCH
 ################################################################
 
 from configuration import src_x32, src_x64
@@ -16,7 +17,7 @@ import re
 import json
 import os
 import sys
-
+import pdb
 
 #########################Pypykatz##############################
 
@@ -51,6 +52,7 @@ class Dumper:
             domain=self.credentials["domain"],
         )
         os = self.smb.getServerOS()
+        # pdb.set_trace()
         arch = self.get_arch()
         domain = self.smb.getServerDomain()
         info_dict.update({"target": self.target})
@@ -61,11 +63,13 @@ class Dumper:
         return info_dict
 
     def get_arch(self):
+        options = Namespace()
+        options.target = self.target
+        NDR64Syntax = ("71710533-BEBA-4937-8319-B5DBEF9CCC36", "1.0")
         try:
-            NDR64Syntax = ("71710533-BEBA-4937-8319-B5DBEF9CCC36", "1.0")
             stringBinding = r"ncacn_ip_tcp:%s[135]" % self.target
             transport = DCERPCTransportFactory(stringBinding)
-            transport.set_connect_timeout(int(10))
+            transport.set_connect_timeout(2)
             dce = transport.get_dce_rpc()
             dce.connect()
             try:
@@ -73,13 +77,17 @@ class Dumper:
             except DCERPCException as e:
                 if str(e).find("syntaxes_not_supported") >= 0:
                     return 32
+                else:
+                    print(str(e))
+                    pass
             else:
                 return 64
-        except Exception:
-            pass
-        finally:
+
             dce.disconnect()
-        return "Unknown"
+        except Exception as e:
+            # import traceback
+            # traceback.print_exc()
+            print(f"{self.target}, {str(e)}")
 
     def upload_file(self):
         if self.host_info["arch"] == 64:
