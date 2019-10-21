@@ -57,7 +57,7 @@ class Dumper:
         info_dict.update({"domain": domain})
         info_dict.update({"arch": arch})
 
-        return info_dict
+        self.host_info = info_dict
 
     def get_arch(self):
         try:
