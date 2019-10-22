@@ -83,7 +83,7 @@ class Dumper:
             dce.disconnect()
         except Exception as e:
             print(f"{self.target}, {str(e)}")
-            print(f"Failed to determene {self.target} architecture")
+            print(f"Failed to determine {self.target} architecture")
             print("Attempt to proceed with 32 bit procdump")
             return 32
 
