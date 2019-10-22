@@ -15,6 +15,7 @@ Overlook of a process:
 
 ### Installation
 First thing you need is to make sure, that your system contains all basic requirements: [Requirements](requirements.md)
+
 Now, you can install it using following guide: [Installation](INSTALLATION.md)
 
 
