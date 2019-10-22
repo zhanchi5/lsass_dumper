@@ -13,6 +13,12 @@ Overlook of a process:
   7. Parsing dump file on localhost using pypykatz
   8. Creating conveniently readable report
 
+### Installation
+First thing you need is to make sure, that your system contains all basic requirements: [Requirements](requirements.md)
+Now, you can install it using following guide: [Installation](INSTALLATION.md)
+
+
+
 ### Usage:
 ```bash
     python3 main.py -u <Webby> -p <W0nderQu@ck> -d <DuckBurg> -H <target_ip> -vr <0|1>
