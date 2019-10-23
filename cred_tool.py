@@ -101,7 +101,7 @@ class Dumper:
             filename = re.sub(r"\d+", "", path.basename(src))
             self.smb.putFile(
                 "C$",
-                filename",
+                filename,
                 open(src, "rb").read,
             )
         else:
