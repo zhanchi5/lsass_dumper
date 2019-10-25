@@ -22,9 +22,9 @@ Now, you can install it using following guide: [Installation](INSTALLATION.md)
 
 ### Usage:
 ```bash
-    python3 main.py -u <Webby> -p <W0nderQu@ck> -d <DuckBurg> -H <target_ip> -vr <0|1>
+    python3 main.py -u <Webby> -p <W0nderQu@ck> -d <DuckBurg> -H <target_ip> -vr <0|1> --auth <psexec|wmiexec>
 ```
   or
 ```bash
-  python3 main.py -u <Webby> -p <W0nderQu@ck> -d <DuckBurg> -L </path/to/target_file> -vr <0|1>
+  python3 main.py -u <Webby> --hashes <LM:NT> -d <DuckBurg> -L </path/to/target_file> -vr <0|1> --auth <psexc|wmiexec>
 ```
