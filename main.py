@@ -21,11 +21,11 @@ def main():
         help="equals 1 or 0| Creds obtaining location will be written in report file",
     )
     parser.add_argument("--auth", help="Auth with psexec or wmiexec")
-    parser.add_argument(
-        "--clean_up",
-        type=bool,
-        help="In case if execution left files on computer, use this to delete those",
-    )
+    # parser.add_argument(
+    #     "--clean_up",
+    #     type=bool,
+    #     help="In case if execution left files on computer, use this to delete those",
+    # )
     args = parser.parse_args()
     if len(sys.argv) > 1:
         pass

