@@ -78,9 +78,9 @@ def main():
             auth=auth,
             hashes=hashes,
         )
-        if args.clean_up is not None:
-            task.clean_up()
-            sys.exit(0)
+        # if args.clean_up is not None:
+        #     task.clean_up()
+        #     sys.exit(0)
         task.run()
         Dumper.dump_to_pypykatz(dump_file="./lsass_dump.dmp")
         Dumper.create_report(
