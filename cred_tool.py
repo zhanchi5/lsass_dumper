@@ -308,8 +308,8 @@ class Dumper:
 
         for helper in cmdhelpers:
             helper.execute(args)
-        # print("Removing dump file")
-        # os.remove(dump_file)
+        print("Removing dump file")
+        os.remove(dump_file)
         print("Done")
 
     @staticmethod
@@ -400,7 +400,7 @@ class Dumper:
                                 report.write(
                                     f"Tickets--{el['domainname']} / {el['username']}:{el['tickets']}\n"
                                 )
-        # os.remove("./temp_report.json")
+        os.remove("./temp_report.json")
         print("Done :)")
 
     def run(self):
